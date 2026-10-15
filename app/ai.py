@@ -193,6 +193,7 @@ class YouTube:
     def __init__(self, config, analyzer):
         self.config, self.analyzer = config, analyzer
         self.search_retry_at = None
+        self.search_retry_code = None
 
     async def analyze(self, title, previous=None):
         if not self.config.youtube_api_key:
@@ -219,7 +220,7 @@ class YouTube:
         if self.search_retry_at and now < self.search_retry_at:
             return {
                 "status": "quota_exceeded",
-                "error_code": "quotaExceeded",
+                "error_code": self.search_retry_code or "quotaExceeded",
                 "checked_at": checked_at,
                 "retry_at": self.search_retry_at.isoformat(),
             }
@@ -302,10 +303,21 @@ class YouTube:
                     code = errors[0].get("reason") if errors else None
                     if isinstance(code, str) and code.replace("_", "").isalnum():
                         result["error_code"] = code[:100]
-                        if code in ("quotaExceeded", "dailyLimitExceeded"):
+                        if code in (
+                            "quotaExceeded",
+                            "dailyLimitExceeded",
+                            "rateLimitExceeded",
+                            "userRateLimitExceeded",
+                        ):
                             result["status"] = "quota_exceeded"
+                            self.search_retry_code = code
                             self.search_retry_at = now + timedelta(hours=1)
                             result["retry_at"] = self.search_retry_at.isoformat()
                 except (ValueError, AttributeError, IndexError):
                     pass
+                if exc.response.status_code == 429 and result["status"] == "error":
+                    result.update(status="quota_exceeded", error_code="rateLimitExceeded")
+                    self.search_retry_code = "rateLimitExceeded"
+                    self.search_retry_at = now + timedelta(hours=1)
+                    result["retry_at"] = self.search_retry_at.isoformat()
             return result

@@ -26,5 +26,8 @@
     {% endif %}
   {% elif video.status == 'not_found' %}<p class="muted">Подходящий летсплей пока не найден. Поиск будет повторён при последующих обновлениях.</p>
   {% elif video.status == 'disabled' %}<p class="muted">Поиск летсплеев пока не настроен.</p>
+  {% elif video.status == 'quota_exceeded' or video.http_status == 429 %}
+    <p class="muted">{% if video.error_code in ['rateLimitExceeded', 'userRateLimitExceeded'] or video.http_status == 429 %}YouTube временно ограничил частоту запросов. Поиск поставлен на паузу.{% else %}Исчерпана квота YouTube API. Поиск временно приостановлен.{% endif %}{% if video.retry_at %} Повтор возможен после {{ video.retry_at[:19].replace('T', ' ') }} UTC при следующей обработке.{% endif %}</p>
+  {% elif video.status == 'error' %}<p class="muted">Не удалось выполнить поиск YouTube.{% if video.http_status %} HTTP {{ video.http_status }}.{% endif %}{% if video.error_code %} Код: {{ video.error_code }}.{% endif %} Поиск будет повторён при следующей обработке.</p>
   {% else %}<p class="muted">Летсплей ещё не загружен или поиск временно недоступен.</p>{% endif %}
 </section>

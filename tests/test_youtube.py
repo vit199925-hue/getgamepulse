@@ -2,6 +2,7 @@ import asyncio
 from datetime import datetime, timezone
 
 import httpx
+import pytest
 from youtube_transcript_api import YouTubeTranscriptApi
 
 from app.ai import Analyzer, YouTube, video_matches
@@ -96,4 +97,23 @@ def test_quota_error_is_sanitized_and_classified(config, monkeypatch):
     assert result["error_code"] == "quotaExceeded"
     assert "secret-test" not in str(result)
     assert asyncio.run(service.analyze("Another game"))["status"] == "quota_exceeded"
+    assert len(calls) == 1
+
+
+@pytest.mark.parametrize("body", [{"error": {"errors": [{"reason": "rateLimitExceeded"}]}}, {}])
+def test_rate_limit_pauses_following_searches(config, monkeypatch, body):
+    config.youtube_api_key = "test"
+    calls = []
+
+    async def get(self, url, **kwargs):
+        calls.append(url)
+        return httpx.Response(429, json=body, request=httpx.Request("GET", url))
+
+    monkeypatch.setattr(httpx.AsyncClient, "get", get)
+    service = YouTube(config, Analyzer(config))
+    first = asyncio.run(service.analyze("Example"))
+    second = asyncio.run(service.analyze("Another game"))
+    assert first["status"] == second["status"] == "quota_exceeded"
+    assert first["error_code"] == second["error_code"] == "rateLimitExceeded"
+    assert first["retry_at"] == second["retry_at"]
     assert len(calls) == 1
