@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="eyebrow">THE GAME INTELLIGENCE LIBRARY</div>
+<div class="page-heading"><div><h1>Игры. Отзывы.<br><span>Всё по делу.</span></h1>
+<p class="muted">Новые релизы, оценки по платформам и анализ мнений в одном месте.</p></div>
+<div class="stat"><strong>{{ total }}</strong><span>ИГР В ВЫБОРКЕ</span><small>Обновление каждый час</small></div></div>
+<form class="filters" method="get"><div class="search"><span>⌕</span><input name="q" value="{{ q }}" placeholder="Найти игру по названию…" aria-label="Поиск по названию"></div>
+<select name="platform" aria-label="Платформа"><option value="">Все платформы</option>{% for p in platforms %}<option {% if p == platform %}selected{% endif %}>{{ p }}</option>{% endfor %}</select>
+<select name="sort" aria-label="Сортировка"><option value="metascore" {% if sort == 'metascore' %}selected{% endif %}>Metascore ↓</option><option value="userscore" {% if sort == 'userscore' %}selected{% endif %}>Userscore ↓</option><option value="updated" {% if sort == 'updated' %}selected{% endif %}>Недавно обновлённые</option></select>
+<button type="submit">Показать ↗</button></form>
+<div class="section-label"><h2>Библиотека игр</h2><span>{{ total }} результатов · стр. {{ page }}</span></div>
+<div class="grid">{% for game in games %}<a class="game-card" href="/games/{{ game.slug }}">
+<div class="cover {% if not game.cover %}placeholder p{{ loop.index % 4 }}{% endif %}">{% if game.cover %}<img src="{{ game.cover|safeurl }}" alt="Обложка {{ game.title }}" loading="lazy">{% else %}<span>{{ game.title[:1] }}</span><small>GAMEPULSE COLLECTION</small>{% endif %}
+{% set scores = game.platforms|map(attribute='metascore')|reject('none')|list %}{% if scores %}<div class="score">{{ scores|max|int }}</div>{% endif %}</div>
+<div class="card-body"><div class="card-genre">{{ game.genres|join(' / ') or 'Жанр не указан' }}</div><h3>{{ game.title }}</h3><p>{{ game.developer or 'Разработчик не указан' }}</p>
+<div class="card-platforms">{% for p in game.platforms[:3] %}<span>{{ p.name }}</span>{% endfor %}</div></div></a>{% else %}<div class="empty"><h2>Пока ничего не найдено</h2><p>Измените фильтры или запустите загрузку игр на странице мониторинга.</p><a href="/monitor">Открыть мониторинг →</a></div>{% endfor %}</div>
+<div class="pagination">{% if page > 1 %}<a href="{{ request.url.include_query_params(page=page-1) }}">← Назад</a>{% endif %}{% if page * 20 < total %}<a href="{{ request.url.include_query_params(page=page+1) }}">Далее →</a>{% endif %}</div>
+<p class="muted small">Сортировка использует максимальную оценку среди выбранных платформ. Отсутствующая оценка не равна нулю.</p>
+{% endblock %}

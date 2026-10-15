@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}GamePulse · Game intelligence{% endblock %}</title>
+<link rel="stylesheet" href="/static/style.css"><link rel="stylesheet" href="/static/auth.css"><link rel="stylesheet" href="/static/letsplay.css"><meta name="csrf-token" content="{{ request.state.csrf }}"></head>
+<body><header><a href="/" class="brand"><span class="brand-icon">g.</span>gamepulse<span class="brand-tag">INTELLIGENCE</span></a>
+<nav>{% if request.state.username %}<a href="/">Библиотека</a><a href="/monitor">Мониторинг <span class="live-dot"></span></a><a href="/docs">API ↗</a><form action="/logout" method="post"><input type="hidden" name="csrf" value="{{ request.state.csrf }}"><button class="logout-button">Выйти</button></form>{% endif %}</nav></header>
+{% if demo %}<div class="demo">DEMO MODE · Синтетические данные для демонстрации. Это не сведения с Metacritic.</div>{% endif %}
+<main>{% block content %}{% endblock %}</main>
+<footer><span>GAMEPULSE / 2026</span><span>Metacritic data · AI-assisted analysis · <a href="/health">Service health ↗</a></span></footer>
+{% block scripts %}{% endblock %}</body></html>

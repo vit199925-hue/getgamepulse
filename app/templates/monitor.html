@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block content %}<div class="eyebrow">OPERATIONS / LIVE</div><div class="page-heading"><div><h1>Всё под<br><span>наблюдением.</span></h1><p class="muted">Состояние воркера, прогресс обхода и история запусков.</p></div><span id="connection" class="pill">Подключение…</span></div>
+<div class="metrics"><div class="panel"><span class="eyebrow">ИГР В БАЗЕ</span><strong id="total">—</strong></div><div class="panel"><span class="eyebrow">ТЕКУЩИЙ ЗАПУСК</span><strong id="progress">—</strong></div><div class="panel"><span class="eyebrow">СОСТОЯНИЕ</span><strong id="worker">—</strong></div></div>
+<div class="panel launch"><div><h2>Запустить обработку</h2><p class="muted">До 20 игр, которые ещё не обработаны за текущий день. Неудачные загрузки повторяются.</p></div><form id="run-form"><button id="run-button">Запустить ↗</button></form></div><p id="notice" role="status"></p>
+<div class="section-label"><h2>История запусков</h2><span id="next">—</span></div><div class="table-wrap"><table><thead><tr><th>Запуск / время UTC</th><th>Статус</th><th>Прогресс</th><th>Ошибки</th><th>Текущая игра / причина</th></tr></thead><tbody id="runs"></tbody></table></div><p class="muted small">Автоматический обход — раз в час. Обновления поступают через Server-Sent Events каждые 2 секунды.</p>
+{% endblock %}
+{% block scripts %}<script src="/static/monitor.js" defer></script>{% endblock %}

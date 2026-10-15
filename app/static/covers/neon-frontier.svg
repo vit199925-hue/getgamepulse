@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 600 800">
+<defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#130e2b"/><stop offset=".7" stop-color="#62304e"/><stop offset="1" stop-color="#e0795b"/></linearGradient><linearGradient id="ground" x2="0" y2="1"><stop stop-color="#25172e"/><stop offset="1" stop-color="#080e1b"/></linearGradient><linearGradient id="sun" x2="0" y2="1"><stop stop-color="#f7b779"/><stop offset="1" stop-color="#ec5c85"/></linearGradient></defs>
+<path fill="url(#sky)" d="M0 0h600v800H0z"/><circle cx="315" cy="307" r="134" fill="url(#sun)"/>
+<g stroke="#582548" stroke-width="8"><path d="M176 315h278M180 340h270M191 365h246M214 390h201M239 415h150"/></g>
+<g fill="#241c39"><path d="M0 400h48V260h46v60h54v96h40V283h54v146h37v-70h59v65h51V297h50v104h53V245h54v171h54v384H0Z"/></g>
+<g fill="#10172b"><path d="M0 800V443h28V338h53v218h37V415h62v133h43V363h64v231h80V389h54v118h30V341h68v187h36V399h45v401Z"/></g>
+<g stroke="#6cc1c7" stroke-width="3" opacity=".7"><path d="M39 362h29m-29 15h29m-29 15h29M236 397h35m-35 18h35m-35 18h35M465 369h39m-39 17h39m-39 17h39M385 421h24m-24 17h24"/></g>
+<g fill="#f477a4"><path d="M132 444h9v52h-9zM155 444h9v52h-9zM240 478h30v7h-30zM468 445h10v62h-10z"/></g>
+<path d="M0 598 260 549h80l260 49v202H0Z" fill="url(#ground)"/>
+<g stroke="#9b6283" opacity=".45"><path d="M300 550 0 800m300-250L90 800m210-250L220 800m80-250 80 250m-80-250 210 250m-210-250 300 250M0 758h600M0 692h600M0 643h600M0 607h600M100 580h400"/></g>
+<path d="M300 555 281 800h38Z" fill="#68d7ce" opacity=".3"/>
+<g transform="translate(306 536)"><circle cy="-11" r="12" fill="#080f1d"/><path d="m-12 2-7 35 10 4-4 43h10L3 48l6 36h10L13 37l6-2L12 1Z" fill="#080f1d"/><path d="m-10 5 1 24" stroke="#f479a7" stroke-width="3"/></g>
+<text x="42" y="53" fill="#f3c6d5" font-family="sans-serif" font-size="12" letter-spacing="4">GAMEPULSE · DEMO ARTWORK</text>
+<text x="42" y="692" fill="#f8e9ef" font-family="sans-serif" font-size="56" letter-spacing="7" font-weight="700">NEON</text><text x="42" y="746" fill="#d9f6ec" font-family="sans-serif" font-size="43" letter-spacing="3">FRONTIER</text><path d="M43 765h90" stroke="#d4f870" stroke-width="3"/></svg>

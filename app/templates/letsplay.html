@@ -1,0 +1,30 @@
+<section class="panel" id="letsplay">
+  <div class="eyebrow">YOUTUBE / LET'S PLAY</div>
+  <h2>Взгляд со стороны геймплея</h2>
+  {% set video = game.letsplay %}
+  {% if video.url %}
+    <div class="letsplay-heading">
+      {% if video.thumbnail %}<a href="{{ video.url|safeurl }}" target="_blank" rel="noopener noreferrer"><img class="letsplay-thumbnail" src="{{ video.thumbnail|safeurl }}" alt="Превью летсплея {{ game.title }}" loading="lazy"></a>{% endif %}
+      <div><h3><a href="{{ video.url|safeurl }}" target="_blank" rel="noopener noreferrer">{{ video.title }} ↗</a></h3>
+      {% if video.channel %}<p class="muted">{{ video.channel }}</p>{% endif %}
+      <p class="muted">{{ '{:,}'.format(video.views|int).replace(',', ' ') }} просмотров при загрузке</p>
+      <p class="muted small">Самый популярный среди подходящих длинных видео, найденных поиском.</p>
+      {% if video.checked_at %}<p class="muted small">Проверено: {{ video.checked_at[:19].replace('T', ' ') }} UTC</p>{% endif %}</div>
+    </div>
+    {% if video.status == 'transcript_unavailable' %}
+      <p class="muted">{% if video.reason == 'TranscriptsDisabled' %}У ролика нет доступных субтитров.{% elif video.reason in ['IpBlocked', 'RequestBlocked'] %}YouTube ограничил доступ к расшифровке из сети сервиса.{% elif video.reason == 'AgeRestricted' %}Расшифровка недоступна из-за возрастных ограничений ролика.{% else %}Не удалось получить расшифровку речи автора.{% endif %} Видео доступно по ссылке, заключение не сформировано.</p>
+    {% else %}
+      <h3>Заключение по рассказу автора</h3>
+      {{ analysis(video.get('summary', {}), unit='фрагментов') }}
+      <p class="muted small">Вывод основан на речи автора и выбранных фрагментах расшифровки. Это не самостоятельное тестирование игры.</p>
+    {% endif %}
+    {% if video.transcript_sample %}
+      <details><summary>Текст и временные отметки ({{ video.transcript_sample|length }} фрагментов)</summary>
+      {% for chunk in video.transcript_sample %}
+        <blockquote id="{{ chunk.id }}"><small>{{ chunk.id }} · <a href="{{ video.url|safeurl }}&amp;t={{ chunk.start|int }}s" target="_blank" rel="noopener noreferrer">{{ (chunk.start|int // 60) }}:{{ '%02d'|format(chunk.start|int % 60) }} ↗</a></small><p>{{ chunk.text }}</p></blockquote>
+      {% endfor %}</details>
+    {% endif %}
+  {% elif video.status == 'not_found' %}<p class="muted">Подходящий летсплей пока не найден. Поиск будет повторён при последующих обновлениях.</p>
+  {% elif video.status == 'disabled' %}<p class="muted">Поиск летсплеев пока не настроен.</p>
+  {% else %}<p class="muted">Летсплей ещё не загружен или поиск временно недоступен.</p>{% endif %}
+</section>

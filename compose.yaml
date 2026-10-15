@@ -1,0 +1,49 @@
+x-service: &service
+  build:
+    context: .
+    args:
+      INSTALL_AUDIO: ${INSTALL_AUDIO:-false}
+  env_file: .env
+  environment:
+    DATABASE_URL: postgresql+psycopg://gamepulse:${POSTGRES_PASSWORD:-local-development-only}@db:5432/gamepulse
+  depends_on:
+    db:
+      condition: service_healthy
+  restart: unless-stopped
+  volumes:
+    - media_data:/service/data
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: gamepulse
+      POSTGRES_DB: gamepulse
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-development-only}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gamepulse"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+  web:
+    <<: *service
+    ports:
+      - "127.0.0.1:8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+  worker:
+    <<: *service
+    command: ["python", "-m", "app.jobs"]
+    depends_on:
+      web:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  media_data:
