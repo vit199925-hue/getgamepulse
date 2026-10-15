@@ -14,6 +14,14 @@ def test_password_is_salted_and_verified():
     assert not verify_password("wrong", one) and not verify_password("secret", "malformed")
 
 
+def test_login_ignores_trailing_spaces_only(web_client):
+    for password in ("test-password ", "test-password    "):
+        assert sign_in(web_client, password).status_code == 303
+        assert web_client.get("/").status_code == 200
+    for password in (" test-password", "test-pass word", "wrong    ", "    "):
+        assert sign_in(web_client, password).status_code == 401
+
+
 def test_anonymous_cannot_access_pages_api_or_docs(web_client):
     for url in ("/", "/monitor", "/games/demo-game-1", "/docs", "/openapi.json"):
         response = web_client.get(url, follow_redirects=False)

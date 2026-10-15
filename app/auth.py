@@ -155,7 +155,7 @@ async def login(request, config, sessions, templates):
                 error, status = "Слишком много попыток. Повторите через 5 минут.", 429
             else:
                 valid = await asyncio.to_thread(
-                    verify_password, fields.get("password", ""), config.web_password_hash
+                    verify_password, fields.get("password", "").rstrip(" "), config.web_password_hash
                 )
                 username_valid = hmac.compare_digest(
                     fields.get("username", "").encode(), config.web_username.encode()
