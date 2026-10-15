@@ -29,6 +29,8 @@ services:
       retries: 20
   web:
     <<: *app
+    # Only the host proxy can reach the published loopback port.
+    command: [uvicorn, app.main:app, --host, 0.0.0.0, --port, '8000', --proxy-headers, --forwarded-allow-ips, '*']
     ports: ['127.0.0.1:18000:8000']
     depends_on:
       db:
