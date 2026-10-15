@@ -7,7 +7,7 @@ import re
 from datetime import datetime, timedelta, timezone
 
 import httpx
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 PROMPT_VERSION = "reviews-v3"
 
@@ -91,15 +91,14 @@ class Analyzer:
             }
             if self.config.llm_model == "gpt-5-nano" or self.config.llm_model.startswith("gpt-5-nano-"):
                 request_body.update(max_completion_tokens=4000, reasoning_effort="minimal")
-                if source_kind == "letsplay":
-                    schema = Summary.model_json_schema()
-                    schema["$defs"]["Claim"]["properties"]["evidence_ids"]["items"]["enum"] = sorted(
-                        r["id"] for r in sample
-                    )
-                    request_body["response_format"] = {
-                        "type": "json_schema",
-                        "json_schema": {"name": "letsplay_summary", "strict": True, "schema": schema},
-                    }
+                schema = Summary.model_json_schema()
+                schema["$defs"]["Claim"]["properties"]["evidence_ids"]["items"]["enum"] = sorted(
+                    r["id"] for r in sample
+                )
+                request_body["response_format"] = {
+                    "type": "json_schema",
+                    "json_schema": {"name": "game_summary", "strict": True, "schema": schema},
+                }
             else:
                 request_body.update(temperature=0.1, max_tokens=1800)
             async with httpx.AsyncClient(timeout=90) as client:
@@ -131,6 +130,11 @@ class Analyzer:
         except (httpx.HTTPError, ValueError, KeyError, IndexError) as exc:
             # Keep last known valid result, but clearly mark its staleness.
             error = dict(base, status="error", reason=type(exc).__name__, previous=previous)
+            if isinstance(exc, ValidationError):
+                error["validation_errors"] = [
+                    {"path": list(item["loc"]), "type": item["type"]}
+                    for item in exc.errors(include_input=False, include_url=False)
+                ]
             if isinstance(exc, httpx.HTTPStatusError):
                 error["http_status"] = exc.response.status_code
                 try:

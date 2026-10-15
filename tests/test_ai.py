@@ -65,6 +65,10 @@ def test_gpt5_nano_uses_supported_reasoning_parameters(config, monkeypatch):
         assert body["max_completion_tokens"] == 4000
         assert body["reasoning_effort"] == "minimal"
         assert "temperature" not in body and "max_tokens" not in body
+        output = body["response_format"]
+        assert output["type"] == "json_schema" and output["json_schema"]["strict"]
+        schema = output["json_schema"]["schema"]
+        assert schema["$defs"]["Claim"]["properties"]["evidence_ids"]["items"]["enum"] == ["1"]
         return httpx.Response(
             200,
             json={
