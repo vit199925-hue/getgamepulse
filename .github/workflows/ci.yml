@@ -1,5 +1,5 @@
 name: quality
-on: [push, pull_request]
+on: [push, pull_request, workflow_dispatch]
 permissions:
   contents: read
 jobs:
@@ -31,4 +31,61 @@ jobs:
       - run: pytest -q
         env:
           TEST_DATABASE_URL: ${{ matrix.database == 'postgres' && 'postgresql+psycopg://gamepulse:test@localhost:5432/gamepulse_test' || '' }}
+      - name: Check Docker build for pull requests
+        if: github.event_name == 'pull_request' && matrix.database == 'sqlite'
+        run: docker build -t gamepulse:check .
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
       - run: docker build -t gamepulse:${{ github.sha }} .
+      - run: docker save gamepulse:${{ github.sha }} | gzip > image.tar.gz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: production-release
+          path: |
+            image.tar.gz
+            deploy/compose.production.yaml
+            deploy/release.sh
+          retention-days: 2
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    environment:
+      name: production
+      url: https://getpulse.testappcd.com
+    concurrency:
+      group: gamepulse-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: production-release
+      - name: Configure SSH
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -eu
+          test -n "$DEPLOY_SSH_KEY"
+          test -n "$DEPLOY_KNOWN_HOSTS"
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/id_ed25519 ~/.ssh/known_hosts
+      - name: Deploy and check health
+        env:
+          RELEASE: ${{ github.sha }}
+        run: |
+          set -eu
+          target="ubuntu@98.88.244.85"
+          remote="/opt/gamepulse/releases/$RELEASE"
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes "$target" "mkdir -p '$remote'"
+          scp -o BatchMode=yes -o StrictHostKeyChecking=yes image.tar.gz deploy/compose.production.yaml deploy/release.sh "$target:$remote/"
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes "$target" "bash '$remote/release.sh' '$RELEASE'"
+      - name: Remove runner SSH credentials
+        if: always()
+        run: rm -f ~/.ssh/id_ed25519 ~/.ssh/known_hosts
