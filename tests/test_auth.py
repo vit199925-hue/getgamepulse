@@ -52,6 +52,22 @@ def test_bad_login_is_rate_limited_and_login_csrf_is_required(web_client):
     assert sign_in(web_client, "wrong").status_code == 429
 
 
+def test_favicon_and_other_login_tabs_do_not_invalidate_form(web_client):
+    response = web_client.get("/login")
+    csrf = BeautifulSoup(response.text, "html.parser").find("input", attrs={"name": "csrf"})["value"]
+    response = web_client.get("/favicon.ico")
+    assert response.status_code == 204
+    assert "set-cookie" not in response.headers
+    web_client.get("/login")
+    response = web_client.post(
+        "/login",
+        data={"username": "admin", "password": "test-password", "csrf": csrf},
+        follow_redirects=False,
+    )
+    assert response.status_code == 303
+    assert web_client.get("/").status_code == 200
+
+
 def test_expiration_and_password_changes_invalidate_session(web_client, sessions, config):
     assert sign_in(web_client).status_code == 303
     with sessions.begin() as db:

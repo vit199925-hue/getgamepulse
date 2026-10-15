@@ -7,7 +7,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import func, select, text
@@ -28,6 +28,13 @@ async def lifespan(app):
 
 
 app = FastAPI(title="GamePulse", version="0.1.0", lifespan=lifespan)
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    return Response(status_code=204)
+
+
 app.mount("/static", StaticFiles(directory=HERE / "static"), name="static")
 app.mount("/media/covers", StaticFiles(directory=settings().cover_directory, check_dir=False), name="covers")
 templates = Jinja2Templates(directory=HERE / "templates")

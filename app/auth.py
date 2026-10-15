@@ -96,7 +96,7 @@ def valid_session(sessions, config, token):
 async def guard(request, call_next, config, sessions):
     path = request.url.path
     request.state.username, request.state.csrf = None, ""
-    if path == "/health" or path.startswith("/static/") or path == "/login":
+    if path in ("/health", "/favicon.ico", "/login") or path.startswith("/static/"):
         return await call_next(request)
     bearer = request.headers.get("authorization", "")
     if (
@@ -176,7 +176,7 @@ async def login(request, config, sessions, templates):
                     response.headers["Cache-Control"] = "no-store"
                     return response
                 error, status = "Неверный логин или пароль.", 401
-    challenge = secrets.token_urlsafe(32)
+    challenge = challenge or secrets.token_urlsafe(32)
     response = templates.TemplateResponse(
         request=request,
         name="login.html",
